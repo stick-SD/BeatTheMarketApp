@@ -1,0 +1,26 @@
+Name,ControlType,Text,LocationX,LocationY,Width,Height,ContainedControls
+tabControlApps,TabControl,,12,37,932,234,tabTechnicalAnalysis,tabInvestmentAnalysis,tabBacktesting
+tabTechnicalAnalysis,TabPage,Technical Analysis,4,24,924,206,
+tabInvestmentAnalysis,TabPage,Investment Analysis,4,24,924,206,
+tabBacktesting,TabPage,Backtesting,4,24,924,206,tabControlBacktesting
+tabControlBacktesting,TabControl,,10,10,500,300,tabMain,tabOther
+tabMain,TabPage,Main,4,24,492,276,
+tabOther,TabPage,Other,4,24,492,276,
+groupBoxTickerSettingsTA,GroupBox,,10,10,400,200,comboBoxClosePriceColumnTA,labelClosePriceColumnTA,labelTickerListToRunTA
+comboBoxClosePriceColumnTA,ComboBox,,20,20,100,30,
+labelClosePriceColumnTA,Label,Close Price Column,20,60,100,30,
+labelTickerListToRunTA,Label,Ticker List to Run,20,100,100,30,
+comboBoxBenchmarkAssetTA,ComboBox,,20,140,100,30,
+comboBoxTickerListToRunTA,ComboBox,,20,180,100,30,
+labelBenchmarkAssetTA,Label,Benchmark Asset,20,220,100,30,
+labelBeatTheMarketAppHeader,Label,Beat The Market App,10,10,200,30,
+buttonRun,Button,Run,10,50,80,30,
+groupBoxStatus,GroupBox,,10,90,400,100,textBoxStatus
+textBoxStatus,TextBox,,20,20,360,60,
+groupBoxTickerSettingBT,GroupBox,,10,200,400,200,comboBoxClosePriceColumnBT,labelClosePriceColumnBT,labelTickerListToRunBT,comboBoxComplemetaryAssetBT,comboBoxTickerListToRunBT,labelComplemetaryAssetBT
+comboBoxClosePriceColumnBT,ComboBox,,20,20,100,30,
+labelClosePriceColumnBT,Label,Close Price Column,20,60,100,30,
+labelTickerListToRunBT,Label,Ticker List to Run,20,100,100,30,
+comboBoxComplemetaryAssetBT,ComboBox,,20,140,100,30,
+comboBoxTickerListToRunBT,ComboBox,,20,180,100,30,
+labelComplemetaryAssetBT,Label,Complemetary Asset,20,220,100,30,

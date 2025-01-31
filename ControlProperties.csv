@@ -1,0 +1,19 @@
+Order,ControlType,Name,LocationX,LocationY,SizeX,SizeY,TabIndex,Text,AutoSize,SelectedIndex,Padding,TabStop,Items,UseVisualStyleBackColor,Multiline,ScrollBars,FormattingEnabled,ChildControls,Click
+Order,ControlType,Name,Location,,Size,,TabIndex,,,SelectedIndex,,,,,,,,tabTechnicalAnalysis;tabInvestmentAnalysis;tabBacktesting,
+3,TabControl,tabControlApps,12,37,932,234,0,,,0,,,,,,,,,
+Order,ControlType,Name,Location,,Size,,TabIndex,Text,AutoSize,,Padding,,,,,,,,
+4,Tab,tabTechnicalAnalysis,4,24,924,206,0,TechnicalAnalysis,TRUE,,3,,,,,,,,
+6,Tab,tabInvestmentAnalysis,6,24,924,206,2,InvestmentAnalysis,TRUE,,3,,,,,,,,
+Order,ControlType,Name,Location,,Size,,TabIndex,Text,,,,TabStop,,,,,,,
+5,GroupBox,groupBoxTickerSettingsTA,6,6,276,137,4,TickerSettings,,,,FALSE,,,,,,,
+Order,ControlType,Name,Location,,Size,,TabIndex,,,,,,Items,,,,FormattingEnabled,,
+8,ComboBox,comboBoxClosePriceColumnTA,133,90,111,23,5,,,,,,5;6,,,,TRUE,,
+Order,ControlType,Name,Location,,Size,,TabIndex,Text,AutoSize,,,,,,,,,,
+1,Label,labelBeatTheMarketAppHeader,20,12,148,19,1,Beat the Market App,TRUE,,,,,,,,,,
+7,Label,labelClosePriceColumnTA,6,93,111,15,4,ClosePriceColumn,TRUE,,,,,,,,,,
+Order,ControlType,Name,Location,,Size,,TabIndex,Text,,,,,,UseVisualStyleBackColor,,,,,Click
+2,Button,buttonRun,188,12,75,23,2,Run,,,,,,TRUE,,,,,yes
+Order,ControlType,Name,Location,,Size,,TabIndex,,,,,,,,Multiline,ScrollBars,,,
+9,TextBox,textBoxStatus,4,19,918,235,0,,,,,,,,TRUE,TRUE,,,
+Order,ControlType,Name,Location,,Size,,TabIndex,Text,AutoSize,,,,,UseVisualStyleBackColor,,,,,
+10,CheckBox,checkBoxPerformFinalDataSmoothing,6,20,177,19,1,PerformFinalDataSmoothing,TRUE,,,,,TRUE,,,,,

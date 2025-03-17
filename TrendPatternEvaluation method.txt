@@ -1,0 +1,579 @@
+        public static TrendPatternResults TrendPatternEvaluation(List<PriceData> priceDataListFiltered)
+        {
+            var resultsTrendAnalysis = new List<TrendAnalResult>();
+            var upTrend = new List<TrendPoint>();
+            var downTrend = new List<TrendPoint>();
+            var trend = new List<Trend>();
+
+            int day = 0;
+            string mode = "Undetermined";
+            string submode = "Undetermined";
+            string modePrediction = mode;
+            double previousDayClosePrice = 0;
+            double currentHigherHigh = 0;
+            int dayCurrentHigherHigh = 1;
+            double currentHigherLow = 0;
+            int dayCurrentHigherLow = 1;
+            double interimMarketHigh = 0;
+            double marketHigh = 0;
+            double currentLowerHigh = 0;
+            int dayCurrentLowerHigh = 1;
+            double currentLowerLow = 0;
+            int dayCurrentLowerLow = 1;
+            double interimMarketLow = 0;
+            double marketLow = 0;
+
+            int[,] marketLevel = new int[priceDataListFiltered.Count, 4];
+
+            for (int i = 0; i < priceDataListFiltered.Count; i++)
+            {
+                day++;
+                //double dateNum = priceDataListFiltered[i].Date.ToOADate();
+                DateTime closeDate = priceDataListFiltered[i].Date;
+                double closePrice = priceDataListFiltered[i].Close;
+
+                string mileStone = "none";
+
+                if (day == 1)
+                {
+                    previousDayClosePrice = closePrice;
+                    currentHigherHigh = closePrice / 1000;
+                    currentHigherLow = closePrice / 1000;
+                    interimMarketHigh = closePrice / 1000;
+                    marketHigh = closePrice * 1000;
+                    currentLowerHigh = closePrice * 1000;
+                    currentLowerLow = closePrice * 1000;
+                    interimMarketLow = closePrice * 1000;
+                    marketLow = closePrice / 1000;
+                }
+                else if (day == 2)
+                {
+                    var patternEvalResult = PatternEval(priceDataListFiltered[day - 2].Close, priceDataListFiltered[day - 1].Close, priceDataListFiltered[day].Close, priceDataListFiltered[day + 1].Close);
+                    mode = patternEvalResult.Mode;
+                    submode = patternEvalResult.Submode;
+                    modePrediction = mode;
+                    // Case 1 - Market moving up -Establish UpTrend and checkfor HigherHigh
+                    if (mode == "UpTrend")
+                    {
+                        if (marketLevel[day, 3] == 2)
+                        {
+                            mileStone = "HigherLow";
+                            submode = "UpTrendUndetermined";
+                            currentHigherLow = closePrice;
+                            dayCurrentHigherLow = 2;
+                            interimMarketLow = closePrice;
+                            currentHigherHigh = previousDayClosePrice;
+                            dayCurrentHigherHigh = 1;
+                            upTrend.Add(new TrendPoint { Day = day - 1, Value = 1 });
+                            interimMarketHigh = previousDayClosePrice;
+                        }
+                        else if (marketLevel[day, 3] == 1)
+                        {
+                            mileStone = "HigherHigh";
+                            submode = "UpTrendUndetermined";
+                            currentHigherHigh = closePrice;
+                            dayCurrentHigherHigh = 2;
+                            interimMarketHigh = closePrice;
+                            currentHigherLow = previousDayClosePrice;
+                            dayCurrentHigherLow = 1;
+                            upTrend.Add(new TrendPoint { Day = day - 1, Value = 2 });
+                            interimMarketLow = previousDayClosePrice;
+                        }
+                        else
+                        {
+                            string message = "Day 2: UpTrend Conumdrum.\n\nClick in cmd window > press CTRL-C > press OK.";
+                            string title = "Settings Issue";
+                            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                            submode = "UpTrendUndetermined";
+                        }
+                        previousDayClosePrice = closePrice;
+                    }
+                    else if (mode == "DownTrend") // Case 2 - Market moving down
+                    {
+                        if (marketLevel[day, 3] == 1) // Check for Lower High
+                        {
+                            mileStone = "LowerHigh";
+                            submode = "DownTrendUndetermined";
+                            currentLowerHigh = closePrice;
+                            dayCurrentLowerHigh = 2;
+                            interimMarketHigh = closePrice;
+                            currentLowerLow = previousDayClosePrice;
+                            dayCurrentLowerLow = 1;
+                            downTrend.Add(new TrendPoint { Day = day - 1, Value = 2 }); // LL - Make correction
+                            interimMarketLow = previousDayClosePrice;
+                        }
+                        else if (marketLevel[day, 3] == 2) // Check for Lower Low
+                        {
+                            mileStone = "LowerLow";
+                            submode = "DownTrendUndetermined";
+                            currentLowerLow = closePrice;
+                            dayCurrentLowerLow = 2;
+                            interimMarketLow = closePrice;
+                            currentLowerHigh = previousDayClosePrice;
+                            dayCurrentLowerHigh = 1;
+                            downTrend.Add(new TrendPoint { Day = day - 1, Value = 1 }); // LH - Make correction
+                            interimMarketHigh = previousDayClosePrice;
+                        }
+                        else
+                        {
+                            submode = "DownTrendUndetermined";
+
+                            string message = "Day 2: DownTrend Conumdrum.\n\nClick in cmd window > press CTRL-C > press OK.";
+                            string title = "Settings Issue";
+                            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        previousDayClosePrice = closePrice;
+                    }
+                    else // Case 3 - Market unchanged
+                    {
+                        mode = "Undetermined";
+                        submode = "Undetermined";
+                        previousDayClosePrice = closePrice;
+                    }
+                }
+                else if (day > 2 && mode == "UpTrend") // Analyze the Uptrend
+                {
+                    var patternEvalResult = PatternEval(priceDataListFiltered[day - 2].Close, priceDataListFiltered[day - 1].Close, priceDataListFiltered[day].Close, priceDataListFiltered[day + 1].Close);
+                    modePrediction = patternEvalResult.Mode;
+
+                    if (closePrice > marketLow && (closePrice > interimMarketHigh || closePrice > currentHigherLow) && closePrice > previousDayClosePrice) // Case 1 - Market Up Day - Moving up from Higher Low - Check for UpTrendImpulse and/or Higher High
+                    {
+                        if (closePrice > currentHigherHigh) // Subcase 1a
+                        {
+
+                            if (marketLevel[day, 3] == 1 && dayCurrentHigherHigh <= dayCurrentHigherLow) // // Subcase 1A1 - Check for Higher High
+                            {
+                                mileStone = "HigherHigh";
+                                currentHigherHigh = closePrice;
+                                dayCurrentHigherHigh = day;
+                                submode = "UpTrendImpulse";
+                            }
+                            else if (marketLevel[day, 3] == 1 && dayCurrentHigherHigh >= dayCurrentHigherLow && submode == "UpTrendReversal") //  Check for Higher High
+                            {
+                                mileStone = "HigherHigh";
+                                currentHigherHigh = closePrice;
+                                dayCurrentHigherHigh = day;
+                                currentHigherLow = previousDayClosePrice;
+                                upTrend[day - 1].Value = 1; // HH - Make correction
+                                dayCurrentHigherLow = day - 1;
+                                submode = "UpTrendImpulse";
+                            }
+                            else if (submode == "UpTrendReversal") // Check for Higher High
+                            {
+                                currentHigherLow = previousDayClosePrice;
+                                upTrend[day - 1].Value = 1; // HH - Make correction
+                                dayCurrentHigherLow = day - 1;
+                                submode = "UpTrendImpulse";
+                            }
+                            else if (submode == "UpTrendUndetermined" || submode == "UpTrendImpulse") // Check for DownTrendImpulse
+                            {
+                                submode = "UpTrendImpulse";
+                            }
+                            else
+                            {
+                                submode = "UpTrendUndetermined";
+                            }
+                        }
+                        else // Subcase 1B
+                        {
+                            submode = "UpTrendUndetermined";
+                        }
+                        previousDayClosePrice = closePrice;
+                        interimMarketHigh = closePrice;
+                    }
+                    else if (closePrice > marketLow && closePrice < interimMarketHigh && closePrice <= previousDayClosePrice) // Case 2 - Market Down Day - Check for UpTrendPullback and/or HigherLow
+                    {
+                        previousDayClosePrice = closePrice;
+                        if (submode == "UpTrendUndetermined" || submode == "UpTrendImpulse") // Subcase 2A - Check for UpTrendPullback, HigherLow, or reversal during UpTrendImpulse when sharePriceMainInvestment < interimMarketHigh && sharePriceMainInvestment <= previousDaysharePriceMainInvestment
+                        {
+                            if (closePrice < currentHigherHigh && closePrice > currentHigherLow) // Subcase 2A1 - Check for UpTrendPullback and/or HigherLow during UpTrendImpulse when sharePriceMainInvestment is between currentHigherHigh and currentHigherLow
+                            {
+                                interimMarketLow = closePrice;
+                                submode = "UpTrendPullback";
+                                if (marketLevel[day, 3] == 2 && dayCurrentHigherHigh >= dayCurrentHigherLow) // Subcase 2A1A - Check for Higher Low - May not need this
+                                {
+                                    mileStone = "HigherLow";
+                                    currentHigherLow = closePrice;
+                                    dayCurrentHigherLow = day;
+                                }
+                            }
+                            else if (closePrice < currentHigherHigh && closePrice < currentHigherLow && modePrediction == "UpTrend") // Subcase 2A1 - Check for Reversal sharePriceMainInvestment is less than currentHigherHigh and currentHigherLow
+                            {
+                                interimMarketLow = closePrice;
+                                submode = "UpTrendPullback";
+                                if (marketLevel[day, 3] == 2 && dayCurrentHigherHigh >= dayCurrentHigherLow) //  Check for Higher Low
+                                {
+                                    mileStone = "HigherLow";
+                                    currentHigherLow = closePrice;
+                                    dayCurrentHigherLow = day;
+                                }
+                            }
+                            else if (closePrice < currentHigherHigh && closePrice < currentHigherLow && modePrediction == "DownTrend") // Subcase 2A1A - Check for Reversal sharePriceMainInvestment is less than currentHigherHigh and currentHigherLow
+                            {
+                                mode = "DownTrend";
+                                submode = "DownTrendUndetermined";
+                                currentHigherHigh = closePrice / 1000;
+                                dayCurrentHigherHigh = 1;
+                                currentHigherLow = closePrice / 1000;
+                                dayCurrentHigherLow = 1;
+                                interimMarketHigh = closePrice / 1000;
+                                marketHigh = closePrice * 1000;
+                                if (marketLevel[day, 3] == 2) // Check for Lower Low
+                                {
+                                    mileStone = "LowerLow";
+                                    currentLowerLow = closePrice;
+                                    dayCurrentLowerLow = day;
+                                }
+                            }
+                            else if (closePrice > currentHigherHigh) //Subcase 2A2 - May not need this
+                            {
+                                submode = "UpTrendPullback";
+                                interimMarketHigh = closePrice;
+                                if (marketLevel[day, 3] == 2 && dayCurrentHigherHigh >= dayCurrentHigherLow) // Subcase 2A2A
+                                {
+                                    mileStone = "HigherLow";
+                                    currentHigherLow = closePrice;
+                                    dayCurrentHigherLow = day;
+                                }
+                            }
+                        }
+                        else if (submode == "UpTrendPullback" && closePrice < currentHigherHigh && closePrice > currentHigherLow) // Subcase 2b - Check for UpTrendPullback and/or HigherLow during UpTrendPullback when sharePriceMainInvestment >= currentHigherLow
+                        {
+                            interimMarketLow = closePrice;
+                            submode = "UpTrendPullback";
+                            if (marketLevel[day, 3] == 2 && dayCurrentHigherHigh >= dayCurrentHigherLow) // Subcase 2b1
+                            {
+                                mileStone = "HigherLow";
+                                currentHigherLow = closePrice;
+                                dayCurrentHigherLow = day;
+                            }
+                        }
+                        else if ((submode == "UpTrendPullback" || submode == "UpTrendReversal") && closePrice < currentHigherLow) // Subcase 2C - Check for Start of DownTrend during UpTrendPullback when sharePriceMainInvestment < currentHigherLow
+                        {
+                            interimMarketLow = closePrice;
+                            mode = "DownTrend";
+                            submode = "DownTrendUndetermined";
+                            currentHigherHigh = closePrice / 1000;
+                            dayCurrentHigherHigh = 1;
+                            currentHigherLow = closePrice / 1000;
+                            dayCurrentHigherLow = 1;
+                            interimMarketHigh = closePrice / 1000;
+                            marketHigh = closePrice * 1000;
+                            if (marketLevel[day, 3] == 2) // Subcase 2C1 - Check for Lower Low
+                            {
+                                mileStone = "LowerLow";
+                                currentLowerLow = closePrice;
+                                dayCurrentLowerLow = day;
+                            }
+                        }
+                        else // Subcase 2D
+                        {
+                            submode = "UpTrendReversal";
+
+                            string message = "Error. UpTrend; Cant decide on submode type.\n\nClick in cmd window > press CTRL-C > press OK.";
+                            string title = "Settings Issue";
+                            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        }
+                    }
+                    else if (closePrice > marketLow && closePrice < interimMarketHigh && closePrice > previousDayClosePrice) // Case 3 - Market-up Day - Check for UpTrendImpulse and/or HigherHigh during UpTrendPullback when sharePriceMainInvestment < interimMarketHigh && sharePriceMainInvestment > previousDaysharePriceMainInvestment
+                    {
+                        previousDayClosePrice = closePrice;
+                        interimMarketHigh = closePrice;
+                        if (submode == "UpTrendUndetermined" || submode == "UpTrendImpulse")
+                        {
+                            string message = "rror. Submode issue.\n\nClick in cmd window > press CTRL-C > press OK.";
+                            string title = "Settings Issue";
+                            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                            if (marketLevel[day, 3] == 1 && dayCurrentHigherHigh <= dayCurrentHigherLow && closePrice > currentHigherHigh) // Subcase 3A1 - Check for Higher High
+                            {
+                                mileStone = "HigherHigh";
+                                submode = "UpTrendImpulse";
+                                currentHigherHigh = closePrice;
+                                dayCurrentHigherHigh = day;
+                            }
+                            else // Subcase 3A2
+                            {
+                                submode = "UpTrendUndetermined";
+                            }
+                        }
+                        else if (submode == "UpTrendPullback")// Subcase 3A
+                        {
+                            interimMarketHigh = closePrice;
+                            if (marketLevel[day, 3] == 1 && dayCurrentHigherHigh <= dayCurrentHigherLow && closePrice > currentHigherHigh) // Subcase 3A1 - Check for Higher High
+                            {
+                                mileStone = "HigherHigh";
+                                submode = "UpTrendImpulse";
+                                currentHigherHigh = closePrice;
+                                dayCurrentHigherHigh = day;
+                            }
+                            else // Subcase 3A2
+                            {
+                                submode = "UpTrendUndetermined";
+                            }
+                        }
+                        else // Subcase 3B
+                        {
+                            submode = "UpTrendUndetermined";
+                        }
+                    }
+                    else if (closePrice < marketLow && closePrice < interimMarketHigh && closePrice < previousDayClosePrice) // Case 4
+                    {
+                        previousDayClosePrice = closePrice;
+                        mode = "DownTrend";
+                        submode = "DownTrendUndetermined";
+                        currentHigherHigh = closePrice / 1000;
+                        dayCurrentHigherHigh = 1;
+                        currentHigherLow = closePrice / 1000;
+                        dayCurrentHigherLow = 1;
+                        interimMarketHigh = closePrice / 1000;
+                        marketHigh = closePrice * 1000;
+                    }
+                    else // Case 5 - Market unchanged
+                    {
+                        previousDayClosePrice = closePrice;
+                        mode = "Undetermined";
+                        submode = "Undetermined";
+                    }
+                }
+                else if (day > 2 && mode == "DownTrend") // Analyze the Downtrend
+                {
+                    var patternEvalResult = PatternEval(priceDataListFiltered[day - 2].Close, priceDataListFiltered[day - 1].Close, priceDataListFiltered[day].Close, priceDataListFiltered[day + 1].Close);
+                    modePrediction = patternEvalResult.Mode;
+                    if (closePrice < marketHigh && (closePrice < interimMarketLow || closePrice < currentLowerHigh) && closePrice < previousDayClosePrice) // Case 1
+                    {
+                        if (closePrice < currentLowerLow) // Subcase 1a
+                        {
+                            if (marketLevel[day, 3] == 2 && dayCurrentLowerLow <= dayCurrentLowerHigh) // Check for Lower Low
+                            {
+                                mileStone = "LowerLow";
+                                currentLowerLow = closePrice;
+                                dayCurrentLowerLow = day;
+                                submode = "DownTrendImpulse";
+                            }
+                            else if (marketLevel[day, 3] == 2 && dayCurrentLowerLow >= dayCurrentLowerHigh && submode == "DownTrendReversal") // Check for LowerLow
+                            {
+                                mileStone = "LowerLow";
+                                currentLowerLow = closePrice;
+                                dayCurrentLowerLow = day;
+                                currentLowerHigh = previousDayClosePrice;
+                                downTrend[day - 1].Value = 2; // LL - Make correction
+                                dayCurrentLowerHigh = day - 1;
+                                submode = "DownTrendImpulse";
+                            }
+                            else if (submode == "DownTrendReversal") // Check for LowerLow
+                            {
+                                currentLowerHigh = previousDayClosePrice;
+                                downTrend[day - 1].Value = 2; // LL - Make correction
+                                dayCurrentLowerHigh = day - 1;
+                                submode = "DownTrendImpulse";
+                            }
+                            else if (submode == "DownTrendUndetermined" || submode == "DownTrendImpulse") // Check for DownTrendImpulse
+                            {
+                                submode = "DownTrendImpulse";
+                            }
+                            else
+                            {
+                                submode = "DownTrendUndetermined";
+                            }
+                        }
+                        else // Subcase 1b
+                        {
+                            submode = "DownTrendUndetermined";
+                        }
+                        previousDayClosePrice = closePrice;
+                        interimMarketLow = closePrice; // New interim low
+                    }
+                    else if (closePrice < marketHigh && closePrice > interimMarketLow && closePrice > previousDayClosePrice) // Case 2
+                    {
+                        previousDayClosePrice = closePrice;
+                        if (submode == "DownTrendUndetermined" || submode == "DownTrendImpulse") // Subcase 2A
+                        {
+                            if (closePrice > currentLowerLow && closePrice < currentLowerHigh) // Subcase 2A1
+                            {
+                                interimMarketHigh = closePrice;
+                                submode = "DownTrendPullback";
+                                if (marketLevel[day, 3] == 1 && dayCurrentLowerLow >= dayCurrentLowerHigh) // Subcase 2A1A - May not need this
+                                {
+                                    mileStone = "LowerHigh";
+                                    currentLowerHigh = closePrice;
+                                    dayCurrentLowerHigh = day;
+                                }
+                            }
+                            else if (closePrice > currentLowerLow && closePrice > currentLowerHigh && modePrediction == "DownTrend")
+                            {
+                                interimMarketHigh = closePrice;
+                                submode = "DownTrendPullback";
+                                if (marketLevel[day, 3] == 1 && dayCurrentLowerLow >= dayCurrentLowerHigh)
+                                {
+                                    mileStone = "LowerHigh";
+                                    currentLowerHigh = closePrice;
+                                    dayCurrentLowerHigh = day;
+                                }
+                            }
+                            else if (closePrice > currentLowerLow && closePrice > currentLowerHigh && modePrediction == "UpTrend") // Subcase 2a1a
+                            {
+                                mode = "UpTrend";
+                                submode = "UpTrendUndetermined";
+                            }
+                        }
+                        else if (submode == "DownTrendPullback" && closePrice > currentLowerLow && closePrice < currentLowerHigh)
+                        {
+                            interimMarketHigh = closePrice;
+                            submode = "DownTrendPullback";
+                            if (marketLevel[day, 3] == 1 && dayCurrentLowerLow >= dayCurrentLowerHigh)
+                            {
+                                mileStone = "LowerHigh";
+                                currentLowerHigh = closePrice;
+                                dayCurrentLowerHigh = day;
+                            }
+                        }
+                        else if ((submode == "DownTrendPullback" || submode == "DownTrendReversal") && closePrice > currentLowerHigh) // Subcase 2a1a
+                        {
+                            interimMarketHigh = closePrice;
+                            mode = "UpTrend";
+                            submode = "UpTrendUndetermined";
+                            currentLowerHigh = closePrice * 1000;
+                            dayCurrentLowerHigh = 1;
+                            currentLowerLow = closePrice * 1000;
+                            dayCurrentLowerLow = 1;
+                            interimMarketLow = closePrice * 1000;
+                            marketLow = closePrice / 1000;
+                            if (marketLevel[day, 3] == 1)
+                            {
+                                mileStone = "HigherHigh";
+                                currentHigherHigh = closePrice;
+                                dayCurrentHigherHigh = day;
+                            }
+                        }
+                        else
+                        {
+                            submode = "DownTrendReversal";
+                        }
+                    }
+                    else if (closePrice < marketHigh && closePrice > interimMarketLow && closePrice < previousDayClosePrice)
+                    {
+                        previousDayClosePrice = closePrice;
+                        interimMarketLow = closePrice;
+                        if (submode == "DownTrendUndetermined" || submode == "DownTrendImpulse")
+                        {
+                            if (marketLevel[day, 3] == 2 && closePrice < currentLowerLow)
+                            {
+                                mileStone = "LowerLow";
+                                submode = "DownTrendImpulse";
+                                currentLowerLow = closePrice;
+                                dayCurrentLowerLow = day;
+                            }
+                            else
+                            {
+                                submode = "DownTrendUndetermined";
+                            }
+                        }
+                        else if (submode == "DownTrendPullback")
+                        {
+                            interimMarketLow = closePrice;
+                            if (marketLevel[day, 3] == 2 && dayCurrentLowerLow <= dayCurrentLowerHigh && closePrice < currentLowerLow)
+                            {
+                                mileStone = "LowerLow";
+                                submode = "DownTrendImpulse";
+                                currentLowerLow = closePrice;
+                                dayCurrentLowerLow = day;
+                            }
+                            else
+                            {
+                                submode = "DownTrendUndetermined";
+                            }
+                        }
+                        else
+                        {
+                            submode = "DownTrendUndetermined";
+                        }
+                    }
+                    else if (closePrice > marketHigh && closePrice > interimMarketLow && closePrice > previousDayClosePrice) // Case 3
+                    {
+                        previousDayClosePrice = closePrice;
+                        mode = "UpTrend";
+                        submode = "UpTrendUndetermined";
+                        currentLowerLow = closePrice * 1000;
+                        dayCurrentLowerLow = 1;
+                        currentLowerHigh = closePrice * 1000;
+                        dayCurrentLowerHigh = 1;
+                        interimMarketLow = closePrice * 1000;
+                        marketLow = closePrice / 1000;
+                    }
+                    else
+                    {
+                        previousDayClosePrice = closePrice;
+                        mode = "Undetermined";
+                        submode = "Undetermined";
+                    }
+                }
+                else if (closePrice > marketHigh && closePrice > interimMarketLow && closePrice > previousDayClosePrice) // Case 4
+                {
+                    previousDayClosePrice = closePrice;
+                    mode = "UpTrend";
+                    submode = "UpTrendUndetermined";
+                    currentLowerLow = closePrice * 1000;
+                    dayCurrentLowerLow = 1;
+                    currentLowerHigh = closePrice * 1000;
+                    dayCurrentLowerHigh = 1;
+                    interimMarketLow = closePrice * 1000;
+                    marketLow = closePrice / 1000;
+                }
+
+                resultsTrendAnalysis.Add(new TrendAnalResult
+                {
+                    Day = day,
+                    CloseDate = closeDate,
+                    SharePrice = closePrice,
+                });
+
+                // Record HH and HL
+                if (mileStone == "HigherHigh")
+                {
+                    upTrend.Add(new TrendPoint { Day = day, Value = closePrice, Milestone = 1 }); // HH
+                }
+                else if (mileStone == "HigherLow")
+                {
+                    upTrend.Add(new TrendPoint { Day = day, Value = closePrice, Milestone = 2 }); // HL
+                }
+                else
+                {
+                    upTrend.Add(new TrendPoint { Day = day, Value = closePrice, Milestone = 3 }); // No Milestone
+                }
+
+                // Record LH and LL
+                if (mileStone == "LowerHigh")
+                {
+                    downTrend.Add(new TrendPoint { Day = day, Value = closePrice, Milestone = 1 }); // LH
+                }
+                else if (mileStone == "LowerLow")
+                {
+                    downTrend.Add(new TrendPoint { Day = day, Value = closePrice, Milestone = 2 }); // LL
+                }
+                else
+                {
+                    downTrend.Add(new TrendPoint { Day = day, Value = closePrice, Milestone = 3 }); // No Milestone
+
+                    // Trend array (record end-of-day Results)
+                    trend.Add(new Trend
+                    {
+                        Mode = mode,
+                        Submode = submode,
+                        Milestone = mileStone
+                    });
+                }
+
+            }
+            return new TrendPatternResults
+            {
+                ResultsTrendAnalysis = resultsTrendAnalysis,
+                UpTrend = upTrend,
+                DownTrend = downTrend,
+                Trend = trend
+            };
+        }
+
+

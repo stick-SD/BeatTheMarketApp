@@ -768,6 +768,7 @@ namespace MarketTrendAnalysis
                 Trend = trend
             };
         }
+    }
 
         private static PatternEvaluationResult PatternEval(double p1, double p2, double p3, double p4)
         {
